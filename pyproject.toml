@@ -3,8 +3,10 @@ name = "sigo-cfe-api"
 version = "0.1.0"
 requires-python = ">=3.14"
 dependencies = [
+    "cryptography>=50.0.1",
     "fastapi[all]>=0.141.1",
     "psycopg2>=2.9.13",
     "pydantic-settings>=2.15.0",
+    "pyjwt>=2.14.0",
     "sqlmodel>=0.0.42",
 ]
