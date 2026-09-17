@@ -1,6 +1,17 @@
+from contextlib import asynccontextmanager
+
 from fastapi import FastAPI
 
-app = FastAPI(title="SIGO CFE API", version="0.0.1")
+from nucleo.db import crear_tablas
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    crear_tablas()
+    yield
+
+
+app = FastAPI(title="SIGO CFE API", version="0.0.1", lifespan=lifespan)
 
 
 @app.get("/")

@@ -1,8 +1,14 @@
-from sqlmodel import Session, create_engine
+from sqlmodel import Session, SQLModel, create_engine
 
 from nucleo.config import config
 
 engine = create_engine(config.db_url, echo=False)
+
+
+def crear_tablas():
+    import modulos.modelos  # noqa: F401
+
+    SQLModel.metadata.create_all(engine)
 
 
 async def obtener_session():
