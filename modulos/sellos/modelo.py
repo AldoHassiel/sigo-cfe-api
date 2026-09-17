@@ -8,5 +8,5 @@ class Sello(SQLModel, table=True):
     rpe: str
     fechaultimomovimiento: date
 
-    cveareasasimed: str = Field(foreign_key="area.id")
+    cvearea: str = Field(foreign_key="area.id")
     area: "Area" = Relationship(back_populates="sellos")
