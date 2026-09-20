@@ -2,8 +2,9 @@ from pathlib import Path
 
 import pandas as pd
 from fastapi import HTTPException, UploadFile
+from pydantic import BaseModel, ValidationError
 
-from modulos.sellos.esquemas import SelloImportacion
+from nucleo.errores import ErrorImportacion
 
 
 def leer_archivo(archivo: UploadFile) -> pd.DataFrame:
@@ -44,7 +45,7 @@ def leer_archivo(archivo: UploadFile) -> pd.DataFrame:
     ) as error:
         raise HTTPException(
             status_code=400,
-            detail="El CSV está vacío, mal formado o no tiene codificación UTF-8.",
+            detail="No se pudo leer el archivo. Revisa su formato y contenido",
         ) from error
 
     datos.columns = [str(columna).strip() for columna in datos.columns]
@@ -52,10 +53,51 @@ def leer_archivo(archivo: UploadFile) -> pd.DataFrame:
     return datos
 
 
-def dataframe_a_sellos(
-    datos: pd.DataFrame,
-) -> list[SelloImportacion]:
-    return [
-        SelloImportacion.model_validate(fila)
-        for fila in datos.to_dict(orient="records")
-    ]
+def validar_datos(
+    datos: pd.DataFrame, esquema: type[BaseModel], clave_unica: str
+) -> list[dict]:
+    if datos.empty:
+        raise ErrorImportacion("El archivo no contiene registros.")
+
+    if datos.columns.duplicated().any():
+        raise ErrorImportacion("Hay encabezados repetidos.")
+
+    obligatorios = {
+        nombre for nombre, campo in esquema.model_fields.items() if campo.is_required()
+    }
+
+    faltantes = obligatorios - set(datos.columns)
+
+    if faltantes:
+        raise ErrorImportacion(f"Faltan columnas: {','.join(sorted(faltantes))}")
+
+    campos = [nombre for nombre in esquema.model_fields if nombre in datos.columns]
+
+    filas = []
+    identificadores = set()
+
+    for numero, valores in enumerate(
+        datos[campos].itertuples(index=False, name=None), start=2
+    ):
+        try:
+            registro = esquema.model_validate(dict(zip(campos, valores))).model_dump()
+        except ValidationError as error:
+            campos_invalidos = ", ".join(
+                ".".join(str(parte) for parte in detalle["loc"])
+                for detalle in error.errors()
+            )
+            raise ErrorImportacion(
+                f"Fila {numero}: formato inválido en {campos_invalidos}."
+            ) from error
+
+        if clave_unica is not None:
+            identificador = registro[clave_unica]
+
+            if identificador in identificadores:
+                raise ErrorImportacion("Hay identificadores repetidos")
+
+            identificadores.add(identificador)
+
+        filas.append(registro)
+
+    return filas
