@@ -1,11 +1,8 @@
-from datetime import date
+from sqlmodel import Field
 
-from sqlmodel import Field, SQLModel
+from modulos.sellos.esquemas import SelloDatos
 
 
-class Sello(SQLModel, table=True):
+class Sello(SelloDatos, table=True):
     numsello: str = Field(primary_key=True)
-    rpe: str
-    fechaultimomovimiento: date
-
     cvearea: str = Field(foreign_key="area.id")
