@@ -13,7 +13,7 @@ async def obtener_sellos():
 
 
 @ruta.post("/importar")
-async def importar_sellos(archivo: UploadFile, session: SessionDep):
+def importar_sellos(archivo: UploadFile, session: SessionDep):
     datos = leer_archivo(archivo)
     datos_filtrados = dataframe_a_sellos(datos)
     sellos = [Sello.model_validate(dato) for dato in datos_filtrados]
