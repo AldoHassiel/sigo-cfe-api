@@ -1,4 +1,4 @@
-from datetime import date, datetime, UTC
+from datetime import UTC, date, datetime
 from typing import Annotated, Literal
 
 from pydantic import StringConstraints, field_validator
