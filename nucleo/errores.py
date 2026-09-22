@@ -1,10 +1,11 @@
 from fastapi import FastAPI, Request
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
-from nucleo.respuestas import RespuestaAPI
 from psycopg2 import Error as PsycopError
 from sqlalchemy.exc import DataError, IntegrityError
 from starlette.exceptions import HTTPException
+
+from nucleo.respuestas import RespuestaAPI
 
 
 class ErrorImportacion(ValueError):
