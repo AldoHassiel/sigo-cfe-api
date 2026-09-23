@@ -24,7 +24,7 @@ def consultar_medidores(session: Session, dias_aviso: int) -> Sequence[RowMappin
     )
 
     consulta = select(
-        col(Medidor.numsello),
+        col(Medidor.nummedidor),
         col(Medidor.rpe),
         fecha,
         col(Medidor.cvearea),

@@ -35,7 +35,7 @@ async def obtener_medidores(
 
 
 @ruta.post("/importar", response_model=RespuestaMedidores)
-def importar_sellos(
+def importar_medidores(
     archivo: UploadFile, session: SessionDep, dias_aviso: DiasAviso = 7
 ) -> RespuestaMedidores:
     datos = leer_archivo(archivo)

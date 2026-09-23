@@ -5,7 +5,7 @@ from openpyxl.utils.datetime import from_excel
 
 from pydantic import StringConstraints, field_validator
 
-TextoObligatorio = Annotated[str, StringConstraints(min_lenght=1)]
+TextoObligatorio = Annotated[str, StringConstraints(min_length=1)]
 
 class MedidorDatos (SQLModel):
     nummedidor: TextoObligatorio
