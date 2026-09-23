@@ -27,10 +27,13 @@ async def obtener_medidores(
 ) -> RespuestaMedidores:
     filas = consultar_medidores(session, dias_aviso)
 
-    respuesta = RespuestaMedidores(
-        exito=True, mensaje="Los medidores fueron obtenidos exitosamente", datos=filas
+    respuesta = RespuestaMedidores.model_validate(
+        {
+            "exito": True,
+            "mensaje": "Los medidores fueron obtenidos exitosamente",
+            "datos": filas,
+        }
     )
-
     return respuesta
 
 
@@ -46,10 +49,12 @@ def importar_medidores(
 
         filas = consultar_medidores(session, dias_aviso)
 
-        respuesta = RespuestaMedidores(
-            exito=True,
-            mensaje="Los medidores fueron importados exitosamente",
-            datos=filas,
+        respuesta = RespuestaMedidores.model_validate(
+            {
+                "exito": True,
+                "mensaje": "Los medidores fueron importados exitosamente",
+                "datos": filas,
+            }
         )
 
     return respuesta
