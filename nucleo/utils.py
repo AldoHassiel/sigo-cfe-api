@@ -54,7 +54,7 @@ def leer_archivo(archivo: UploadFile) -> pd.DataFrame:
 
 
 def validar_datos(
-    datos: pd.DataFrame, esquema: type[BaseModel], clave_unica: str
+    datos: pd.DataFrame, esquema: type[BaseModel], clave_unica: str | None = None
 ) -> list[dict]:
     if datos.empty:
         raise ErrorImportacion("El archivo no contiene registros.")
