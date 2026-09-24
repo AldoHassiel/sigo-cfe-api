@@ -1,5 +1,5 @@
 from pathlib import Path
-
+from datetime import UTC, datetime, timedelta, timezone
 import pandas as pd
 from fastapi import HTTPException, UploadFile
 from pydantic import BaseModel, ValidationError
@@ -101,3 +101,8 @@ def validar_datos(
         filas.append(registro)
 
     return filas
+
+
+def convertir_a_time(hora_string: str):
+    hora_convertida = datetime.strptime(hora_string, "%H:%M:%S").time()
+    return hora_convertida
