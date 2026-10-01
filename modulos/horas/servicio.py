@@ -1,5 +1,9 @@
 from datetime import time, timedelta
 
+from sqlmodel import Session, col, select, insert, delete
+
+from .modelo import HoraExtrasBD
+
 
 def acumular_horas_extras(datos: list[dict[str, str | time]]):
     conjunto_rpe = set()
@@ -69,3 +73,16 @@ def transformar_texto_a_esquema_horas(texto_crudo: str):
         datos_transformados.append({"RPE": rpe, "TOTAL": hora})
 
     return datos_transformados
+
+
+def consultar_horas_extras(session: Session):
+    consulta = select(
+        col(HoraExtrasBD.rpe).label("rpe"),
+        col(HoraExtrasBD.TOTAL).label("horas_totales"),
+    ).order_by(col(HoraExtrasBD.rpe))
+
+    return session.execute(consulta).mappings().all()
+
+def remplazar_horas_extras(session: Session, datos: list[dict]) -> None:
+    session.exec(delete(HoraExtrasBD))
+    session.exec(insert(HoraExtrasBD), params=datos)
