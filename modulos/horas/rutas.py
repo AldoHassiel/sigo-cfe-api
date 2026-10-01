@@ -33,5 +33,5 @@ async def importar_horas_extras(archivo: UploadFile, session: SessionDep):
 @ruta.post("/importar-texto")
 async def importar_texto_crudo(texto: Annotated[str, Form(...)]):
     texto_limpio = transformar_texto_a_esquema_horas(texto)
-
-    return texto_limpio
+    
+    return acumular_horas_extras(texto_limpio)

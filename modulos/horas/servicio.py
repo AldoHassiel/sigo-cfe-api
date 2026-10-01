@@ -1,27 +1,34 @@
 from datetime import time, timedelta
 
-from sqlmodel import text
 
-from nucleo.utils import convertir_a_time
-
-
-def acumular_horas_extras(datos: list[dict[str, time]]):
+def acumular_horas_extras(datos: list[dict[str, str | time]]):
     conjunto_rpe = set()
     diccionario_de_horas: dict[str, timedelta] = {}
 
     for empleado in datos:
         rpe = empleado["RPE"]
         hora = empleado["TOTAL"]
-        if isinstance(hora, str):
-            hora = convertir_a_time(hora)
 
-        # timedelta permite sumar duraciones y acumular más de 24 horas.
-        horas_extras = timedelta(
-            hours=hora.hour,
-            minutes=hora.minute,
-            seconds=hora.second,
-            microseconds=hora.microsecond,
-        )
+        # timedelta admite duraciones mayores a 24 horas.
+        if isinstance(hora, str):
+            partes = hora.strip().split(":")
+            if len(partes) == 2:
+                partes.append("0")
+            elif len(partes) != 3:
+                raise ValueError(f"Formato de duración inválido: {hora!r}")
+
+            horas, minutos, segundos = map(int, partes)
+            if horas < 0 or not (0 <= minutos < 60 and 0 <= segundos < 60):
+                raise ValueError(f"Duración inválida: {hora!r}")
+
+            horas_extras = timedelta(hours=horas, minutes=minutos, seconds=segundos)
+        else:
+            horas_extras = timedelta(
+                hours=hora.hour,
+                minutes=hora.minute,
+                seconds=hora.second,
+                microseconds=hora.microsecond,
+            )
         if rpe in conjunto_rpe:
             diccionario_de_horas[rpe] += horas_extras
             continue
