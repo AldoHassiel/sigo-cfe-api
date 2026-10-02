@@ -29,6 +29,7 @@ class HorasExtrasBase(SQLModel):
 class HorasExtrasRespuesta(SQLModel):
     rpe: TextoObligatorio
     horas_totales: DuracionHoras
+    excede_limite_semanal: bool
 
 
 class RegistroHoras(TypedDict):

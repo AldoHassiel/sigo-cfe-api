@@ -1,12 +1,27 @@
-from datetime import timedelta
+from datetime import time, timedelta
 
 from sqlmodel import Session, col, delete, insert, select
 
 from nucleo.errores import ErrorImportacion
 
 from .duracion import convertir_duracion, formatear_duracion
-from .esquema import HorasExtrasBase, RegistroHoras
+from .esquema import HorasExtrasBase, HorasExtrasRespuesta, RegistroHoras
 from .modelo import HoraExtrasBD
+
+
+def crear_respuesta_horas_extras(
+    rpe: str,
+    horas_totales: str | time | timedelta,
+    limite_horas_semanales: float,
+) -> HorasExtrasRespuesta:
+    duracion = convertir_duracion(horas_totales)
+    return HorasExtrasRespuesta(
+        rpe=rpe,
+        horas_totales=duracion,
+        excede_limite_semanal=(
+            duracion.total_seconds() > limite_horas_semanales * 3600
+        ),
+    )
 
 
 def acumular_horas_extras(datos: list[RegistroHoras]):
