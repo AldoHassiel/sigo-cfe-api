@@ -1,5 +1,5 @@
-from datetime import timedelta
-from typing import Annotated
+from datetime import time, timedelta
+from typing import Annotated, TypedDict
 
 from pydantic import BeforeValidator, PlainSerializer, StringConstraints, WithJsonSchema
 from sqlmodel import SQLModel
@@ -11,11 +11,13 @@ DuracionHoras = Annotated[
     timedelta,
     BeforeValidator(convertir_duracion),
     PlainSerializer(formatear_duracion, return_type=str, when_used="json"),
-    WithJsonSchema({
-        "type": "string",
-        "pattern": r"^[0-9]+:[0-5][0-9](?::[0-5][0-9](?:\.[0-9]{1,6})?)?$",
-        "examples": ["24:00:00", "125:30:00"],
-    }),
+    WithJsonSchema(
+        {
+            "type": "string",
+            "pattern": r"^[0-9]+:[0-5]?[0-9](?::[0-5]?[0-9](?:\.[0-9]{1,6})?)?$",
+            "examples": ["3:0", "5:7", "24:00:00", "125:30:00"],
+        }
+    ),
 ]
 
 
@@ -27,3 +29,8 @@ class HorasExtrasBase(SQLModel):
 class HorasExtrasRespuesta(SQLModel):
     rpe: TextoObligatorio
     horas_totales: DuracionHoras
+
+
+class RegistroHoras(TypedDict):
+    RPE: str
+    TOTAL: str | time | timedelta

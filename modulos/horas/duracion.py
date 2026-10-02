@@ -14,7 +14,7 @@ def convertir_duracion(valor: str | time | timedelta) -> timedelta:
         )
     elif isinstance(valor, str):
         partes = re.fullmatch(
-            r"([0-9]+):([0-5][0-9])(?::([0-5][0-9])(?:\.([0-9]{1,6}))?)?",
+            r"([0-9]+):([0-5]?[0-9])(?::([0-5]?[0-9])(?:\.([0-9]{1,6}))?)?",
             valor.strip(),
         )
         if partes is None:
