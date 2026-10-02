@@ -2,10 +2,12 @@ from datetime import time, timedelta
 
 from sqlmodel import Session, col, select, insert, delete
 
+from .duracion import convertir_duracion, formatear_duracion
+from .esquema import HorasExtrasBase
 from .modelo import HoraExtrasBD
 
 
-def acumular_horas_extras(datos: list[dict[str, str | time]]):
+def acumular_horas_extras(datos: list[dict[str, str | time | timedelta]]):
     conjunto_rpe = set()
     diccionario_de_horas: dict[str, timedelta] = {}
 
@@ -13,26 +15,7 @@ def acumular_horas_extras(datos: list[dict[str, str | time]]):
         rpe = empleado["RPE"]
         hora = empleado["TOTAL"]
 
-        # timedelta admite duraciones mayores a 24 horas.
-        if isinstance(hora, str):
-            partes = hora.strip().split(":")
-            if len(partes) == 2:
-                partes.append("0")
-            elif len(partes) != 3:
-                raise ValueError(f"Formato de duración inválido: {hora!r}")
-
-            horas, minutos, segundos = map(int, partes)
-            if horas < 0 or not (0 <= minutos < 60 and 0 <= segundos < 60):
-                raise ValueError(f"Duración inválida: {hora!r}")
-
-            horas_extras = timedelta(hours=horas, minutes=minutos, seconds=segundos)
-        else:
-            horas_extras = timedelta(
-                hours=hora.hour,
-                minutes=hora.minute,
-                seconds=hora.second,
-                microseconds=hora.microsecond,
-            )
+        horas_extras = convertir_duracion(hora)
         if rpe in conjunto_rpe:
             diccionario_de_horas[rpe] += horas_extras
             continue
@@ -42,9 +25,7 @@ def acumular_horas_extras(datos: list[dict[str, str | time]]):
 
     resultado = {}
     for rpe, duracion in diccionario_de_horas.items():
-        horas, resto = divmod(int(duracion.total_seconds()), 3600)
-        minutos, segundos = divmod(resto, 60)
-        resultado[rpe] = f"{horas:02d}:{minutos:02d}:{segundos:02d}"
+        resultado[rpe] = formatear_duracion(duracion)
 
     return resultado
 
@@ -77,12 +58,15 @@ def transformar_texto_a_esquema_horas(texto_crudo: str):
 
 def consultar_horas_extras(session: Session):
     consulta = select(
-        col(HoraExtrasBD.rpe).label("rpe"),
+        col(HoraExtrasBD.RPE).label("rpe"),
         col(HoraExtrasBD.TOTAL).label("horas_totales"),
-    ).order_by(col(HoraExtrasBD.rpe))
+    ).order_by(col(HoraExtrasBD.RPE))
 
     return session.execute(consulta).mappings().all()
 
+
 def remplazar_horas_extras(session: Session, datos: list[dict]) -> None:
+    registros = [HorasExtrasBase.model_validate(dato).model_dump() for dato in datos]
     session.exec(delete(HoraExtrasBD))
-    session.exec(insert(HoraExtrasBD), params=datos)
+    if registros:
+        session.exec(insert(HoraExtrasBD), params=registros)
