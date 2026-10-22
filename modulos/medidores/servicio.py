@@ -6,7 +6,7 @@ from sqlalchemy import literal, select
 from sqlalchemy.engine import RowMapping
 from sqlmodel import Session, case, col, delete, insert
 
-from modulos.modelos import Area
+from modulos.areas.modelo import Area
 from modulos.medidores.modelo import Medidor
 
 
