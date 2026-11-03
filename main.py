@@ -8,7 +8,7 @@ from nucleo.db import crear_tablas
 from nucleo.errores import registrar_manejadores
 
 origins = [
-    "http://localhost:5173",
+    "https://sigo-xi.vercel.app",
 ]
 
 
