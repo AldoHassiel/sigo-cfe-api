@@ -7,9 +7,7 @@ from modulos.rutas import api_router
 from nucleo.db import crear_tablas
 from nucleo.errores import registrar_manejadores
 
-origins = [
-    "https://sigo-xi.vercel.app",
-]
+origins = ["https://sigo-xi.vercel.app", "http://localhost:5173"]
 
 
 @asynccontextmanager
