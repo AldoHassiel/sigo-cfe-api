@@ -1,4 +1,4 @@
-from datetime import timedelta
+from datetime import date, timedelta
 from typing import Annotated
 
 from pydantic import BeforeValidator, PlainSerializer, StringConstraints, WithJsonSchema
@@ -21,9 +21,16 @@ DuracionHoras = Annotated[
 ]
 
 
+class HorasSemana(SQLModel):
+    semana: date  # Lunes de la semana
+    horas: DuracionHoras
+    excede_limite_semanal: bool
+
+
 class HorasExtrasRespuesta(SQLModel):
     rpe: TextoObligatorio
     horas_totales: DuracionHoras
     semanas_excedidas: int
     total_semanas: int
     excede_limite_semanal: bool
+    semanas: list[HorasSemana]
