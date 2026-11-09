@@ -2,7 +2,12 @@ from sqlmodel import Session, SQLModel, create_engine
 
 from nucleo.config import config
 
-engine = create_engine(config.db_url, echo=False)
+engine = create_engine(
+    config.db_url,
+    echo=False,
+    pool_pre_ping=True,
+    pool_recycle=240,
+)
 
 
 def crear_tablas():

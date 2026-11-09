@@ -2,7 +2,7 @@ from fastapi import FastAPI, Request
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 from psycopg2 import Error as PsycopError
-from sqlalchemy.exc import DataError, IntegrityError
+from sqlalchemy.exc import DataError, IntegrityError, OperationalError
 from starlette.exceptions import HTTPException
 
 from nucleo.respuestas import RespuestaAPI
@@ -53,6 +53,12 @@ def registrar_manejadores(app: FastAPI) -> None:
     async def error_datos(_request: Request, error):
         return respuesta_error(
             422, "Hay un valor incompatible con el tipo o tamaño de una columna"
+        )
+
+    @app.exception_handler(OperationalError)
+    async def error_conexion_bd(_request: Request, error):
+        return respuesta_error(
+            503, "No se pudo conectar con la base de datos. Intenta de nuevo."
         )
 
     @app.exception_handler(HTTPException)
