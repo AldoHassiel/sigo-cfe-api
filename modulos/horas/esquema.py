@@ -1,5 +1,5 @@
-from datetime import time, timedelta
-from typing import Annotated, TypedDict
+from datetime import timedelta
+from typing import Annotated
 
 from pydantic import BeforeValidator, PlainSerializer, StringConstraints, WithJsonSchema
 from sqlmodel import SQLModel
@@ -21,17 +21,9 @@ DuracionHoras = Annotated[
 ]
 
 
-class HorasExtrasBase(SQLModel):
-    RPE: TextoObligatorio
-    TOTAL: DuracionHoras
-
-
 class HorasExtrasRespuesta(SQLModel):
     rpe: TextoObligatorio
     horas_totales: DuracionHoras
+    semanas_excedidas: int
+    total_semanas: int
     excede_limite_semanal: bool
-
-
-class RegistroHoras(TypedDict):
-    RPE: str
-    TOTAL: str | time | timedelta

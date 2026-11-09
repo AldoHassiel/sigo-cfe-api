@@ -1,19 +1,16 @@
 from typing import Annotated
 
-from fastapi import APIRouter, Form, Query, UploadFile
+from fastapi import APIRouter, File, Form, Query, UploadFile
 
 from dependencias import SessionDep
+from modulos.horas.importacion import importar_registros
 from modulos.horas.servicio import (
-    acumular_horas_extras,
     consultar_horas_extras,
-    crear_respuesta_horas_extras,
-    remplazar_horas_extras,
-    transformar_texto_a_esquema_horas,
+    remplazar_registros_horas_extras,
 )
 from nucleo.respuestas import RespuestaAPI
-from nucleo.utils import leer_archivo, validar_datos
 
-from .esquema import HorasExtrasBase, HorasExtrasRespuesta, RegistroHoras
+from .esquema import HorasExtrasRespuesta
 
 ruta = APIRouter(
     prefix="/horas-extras",
@@ -29,8 +26,8 @@ LimiteHorasSemanales = Annotated[
         ge=0,
         allow_inf_nan=False,
         description=(
-            "Límite de horas extras por RPE para la semana importada. "
-            "El indicador es verdadero solo cuando el total supera este valor."
+            "Límite de horas extras por RPE en cada semana. "
+            "El indicador es verdadero cuando al menos una semana supera este valor."
         ),
     ),
 ]
@@ -41,75 +38,37 @@ def obtener_horas_extras(
     session: SessionDep,
     limite_horas_semanales: LimiteHorasSemanales = LIMITE_HORAS_SEMANALES_PREDETERMINADO,
 ) -> RespuestaHorasExtras:
-    filas = consultar_horas_extras(session)
-
     return RespuestaHorasExtras.model_validate(
         {
             "exito": True,
             "mensaje": "Las horas extras fueron obtenidas exitosamente",
-            "datos": [
-                crear_respuesta_horas_extras(
-                    fila["rpe"], fila["horas_totales"], limite_horas_semanales
-                )
-                for fila in filas
-            ],
+            "datos": consultar_horas_extras(session, limite_horas_semanales),
         }
     )
 
 
 @ruta.post("/importar", response_model=RespuestaHorasExtras)
-async def importar_horas_extras(
-    archivo: UploadFile,
+def importar_horas_extras(
     session: SessionDep,
+    archivos: Annotated[
+        list[UploadFile] | None,
+        File(description="Uno o varios archivos .xlsx, .xls o .csv."),
+    ] = None,
+    textos: Annotated[
+        list[str] | None,
+        Form(description="Una o varias tablas copiadas del sistema o de Excel."),
+    ] = None,
     limite_horas_semanales: LimiteHorasSemanales = LIMITE_HORAS_SEMANALES_PREDETERMINADO,
 ) -> RespuestaHorasExtras:
-    datos = leer_archivo(archivo)
-    registros = validar_datos(datos, HorasExtrasBase)
-    registros_tipados: list[RegistroHoras] = [
-        {"RPE": registro["RPE"], "TOTAL": registro["TOTAL"]} for registro in registros
-    ]
-    conjunto = acumular_horas_extras(registros_tipados)
-    lista_horas = [
-        crear_respuesta_horas_extras(rpe, hora, limite_horas_semanales)
-        for rpe, hora in conjunto.items()
-    ]
+    registros = importar_registros(archivos or [], textos or [])
 
     with session.begin():
-        remplazar_horas_extras(
-            session, [{"RPE": rpe, "TOTAL": total} for rpe, total in conjunto.items()]
-        )
+        remplazar_registros_horas_extras(session, registros)
 
     return RespuestaHorasExtras.model_validate(
         {
             "exito": True,
             "mensaje": "Las horas extras fueron importadas exitosamente",
-            "datos": lista_horas,
-        }
-    )
-
-
-@ruta.post("/importar-texto", response_model=RespuestaHorasExtras)
-async def importar_texto_crudo(
-    texto: Annotated[str, Form(...)],
-    session: SessionDep,
-    limite_horas_semanales: LimiteHorasSemanales = LIMITE_HORAS_SEMANALES_PREDETERMINADO,
-) -> RespuestaHorasExtras:
-    texto_limpio = transformar_texto_a_esquema_horas(texto)
-    conjunto = acumular_horas_extras(texto_limpio)
-    lista_horas = [
-        crear_respuesta_horas_extras(rpe, total, limite_horas_semanales)
-        for rpe, total in conjunto.items()
-    ]
-
-    with session.begin():
-        remplazar_horas_extras(
-            session, [{"RPE": rpe, "TOTAL": total} for rpe, total in conjunto.items()]
-        )
-
-    return RespuestaHorasExtras.model_validate(
-        {
-            "exito": True,
-            "mensaje": "Las horas extras fueron importadas exitosamente",
-            "datos": lista_horas,
+            "datos": consultar_horas_extras(session, limite_horas_semanales),
         }
     )
