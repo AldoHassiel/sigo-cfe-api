@@ -5,14 +5,21 @@ from openpyxl.utils.datetime import from_excel
 from pydantic import StringConstraints, field_validator
 from sqlmodel import SQLModel
 
-TextoObligatorio = Annotated[str, StringConstraints(min_length=1)]
+TextoObligatorio = Annotated[
+    str, StringConstraints(min_length=1, strip_whitespace=True)
+]
 
 
 class SelloDatos(SQLModel):
     numsello: TextoObligatorio
-    rpe: TextoObligatorio
-    fechaultimomovimiento: date
+    codigosello: TextoObligatorio
     cvearea: TextoObligatorio
+    ultimomovimiento: TextoObligatorio
+    proximomovimiento: TextoObligatorio
+    rpe: TextoObligatorio
+    rpesimed: TextoObligatorio
+    fechaultimomovimiento: date
+    cveareasimed: TextoObligatorio
 
     @field_validator("fechaultimomovimiento", mode="before")
     @classmethod
@@ -32,3 +39,6 @@ class SelloRespuesta(SelloDatos):
     nombre_area: str
     estado: Literal["vencido", "proximo", "vigente"]
     dias_restantes: int
+    dias_con_sello: int
+    sello: str
+    tipo: str
